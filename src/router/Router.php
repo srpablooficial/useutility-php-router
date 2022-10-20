@@ -123,8 +123,6 @@ class Router
         //Si no existe el archivo *htaccess se creará
         if (!file_exists($file)) {
 
-            echo "NO ESXITES";
-
             $newFile = file_get_contents($path_htaccess);
             file_put_contents($file, $newFile);
         }
