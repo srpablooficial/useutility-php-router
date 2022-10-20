@@ -1,12 +1,16 @@
 <?php
-require_once __DIR__ . "/vendor/autoload.php";
 
-use Api\Configuration\Router\Router;
+use useutility\php\router\Router;
+
+require_once __DIR__ . "/vendor/autoload.php";
 
 $Router = new Router(true);
 
-$Router->router('/users', ['path' => 'carpeta1/nombre']);
-$Router->router('/users/{id}', ['methods' => ['POST']]);
+$Router->router('/users/{name}/profile');
+$Router->router('/users/{name}/profile/{id}');
+
+$Router->router('/users/{name}');
+$Router->router('/users');
 
 //$Router->router('/updates', ['path' => 'carpeta1/nombre', 'methods' => ['POST', 'GET', 'PUT']]);
 

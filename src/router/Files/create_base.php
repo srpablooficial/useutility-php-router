@@ -5,22 +5,22 @@ class examples
 
     public function GET($param)
     {
-        echo "GET!";
+        echo "GET_examples";
     }
 
     public function POST($param)
     {
-        echo "POST!";
+        echo "POST_examples";
     }
 
     public function PUT($param)
     {
-        echo "PUT!";
+        echo "PUT_examples";
     }
 
     public function DELETE($param)
     {
-        echo "DELETE!";
+        echo "DELETE_examples";
     }
 
 }

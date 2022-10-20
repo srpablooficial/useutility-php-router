@@ -1,5 +1,5 @@
 {
-  "name": "useutility-php/router",
+  "name": "useutility/php-router",
   "type": "library",
   "description": "useUtility.dev",
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "useutility-php\\router\\": "src/router"
+      "useutility\\php\\router\\": "src/router/"
     },
     "exclude-from-classmap": [
       "/Tests/"

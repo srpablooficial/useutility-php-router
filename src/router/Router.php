@@ -1,6 +1,6 @@
 <?php
 
-namespace Api\Configuration\Router;
+namespace useutility\php\router;
 
 use Exception;
 
@@ -26,7 +26,7 @@ class Router
         //Creamos Router para htaccess
         $this->create_htaccess();
 
-        $this->create_json();
+        //$this->create_json();
 
     }
 
@@ -118,10 +118,13 @@ class Router
     private function create_htaccess()
     {
         $path_htaccess = __DIR__ . "/Files/.htaccess";
-        $file = __DIR__ . "/../../../.htaccess";
+        $file = $_SERVER['DOCUMENT_ROOT'] . "/.htaccess";
 
         //Si no existe el archivo *htaccess se creará
         if (!file_exists($file)) {
+
+            echo "NO ESXITES";
+
             $newFile = file_get_contents($path_htaccess);
             file_put_contents($file, $newFile);
         }
@@ -195,8 +198,8 @@ class Router
                     $folder_class = null;
                     $name_class = null;
 
-                    $callback = $values['callback'];
-                    $settings = $values['settings'];
+                    $callback = isset($values['callback']) ? $values['callback'] : null;
+                    $settings = isset($values['settings']) ? $values['settings'] : null;
 
                     $METHODS = null;
 
@@ -250,7 +253,7 @@ class Router
 
                     }
 
-                    $this->json_update($json);
+                    //    $this->json_update($json);
 
                     if (preg_match_all("/\/(\w+)\/{(\w+)}/i", $path, $path_match) && preg_match_all("/\/(\w+)\/([\w%]+)/i", $requestPath, $requestpath_match)) {
 
@@ -261,14 +264,16 @@ class Router
 
                         if ($maxNumb == count($query_values) && $maxNumb == count($path_match[1])) {
 
-                            $query_values = array_map(fn($values) => urldecode($values)
-                                , $query_values);
+                            $query_values = array_map(function ($values) {
+                                return urldecode($values);
+                            }, $query_values);
 
                             $query = array_combine($query_keys, $query_values);
                             $_GET = null;
                             $_GET = $query;
-
-                            $url_method = $_GET;
+                            $url = array_map(function ($key, $values) {
+                                return $key . "/" . $values;
+                            }, $path_match[1], $query_values);
 
                             preg_match_all("/{\w+}/i", $path, $path_old);
 
@@ -276,9 +281,12 @@ class Router
                         }
                     }
 
+                    //   print_r(PHP_EOL . $this->routeURL . $path . " !== " . $this->routeURL . urldecode($requestPath) . PHP_EOL);
+
                     if ($this->routeURL . $path !== $this->routeURL . urldecode($requestPath)) {
                         continue;
                     }
+
                     $found = true;
 
                     if (!$callback) {
