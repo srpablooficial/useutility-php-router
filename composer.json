@@ -14,7 +14,7 @@
       "name": "Pablo Segura"
     }
   ],
-  "minimum-stability": "dev",
+  "minimum-stability": "alpha",
   "autoload": {
     "psr-4": {
       "useutility\\php\\router\\": "src/router/"
