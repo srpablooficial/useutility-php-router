@@ -240,7 +240,7 @@ class Router
                         "callback" => $callback ? true : false,
                     ];
 
-                    $folder_path = __DIR__ . "/../../Controllers$folder_class/";
+                    $folder_path = $_SERVER['DOCUMENT_ROOT'] . "/Controllers$folder_class/";
                     $controller_path = "$folder_path$name_class.php";
                     //      if (!file_exists($extras_path)) {  $Template->create_extras(["return" => $this->noFound]);   }
 
