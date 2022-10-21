@@ -157,15 +157,21 @@ class Router
      * Ejecuta la lectura de las funciones impuestas anteriormente, como Routers, estado de desarrollo, path, etc.
      * @param string $routeURL : string path principal de donde se hará la llamda
      */
-    public function run(string $routeURL = '')
+    public function run(string $routeURL = '', string $contentType = null)
     {
         try {
+
+            if ($contentType) {
+
+                header("Content-Type: $contentType");
+
+            }
 
             #Si la RutaURL está especificada, usar como path principal
             $this->routeURL = $routeURL ? $routeURL : $this->routeURL;
 
             #Seteamos JSON como cabezera
-            header("Content-Type: application/json");
+            // header("Content-Type: application/json");
 
             #Obtenemos el path completo solicitado
 
@@ -276,6 +282,7 @@ class Router
                             preg_match_all("/{\w+}/i", $path, $path_old);
 
                             $path = str_replace($path_old[0], $query, $path);
+
                         }
                     }
 
@@ -334,7 +341,17 @@ class Router
         } catch (\Exception$th) {
             http_response_code(404);
             if (isset($this->noFound)) {
-                echo json_encode($this->noFound);
+
+                $noFound = $this->noFound;
+
+                if (is_array($noFound)) {
+                    echo json_encode($noFound);
+                    return false;
+                } else {
+                    $noFound();
+                    return false;
+                }
+
             }
             return false;
         }

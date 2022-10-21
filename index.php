@@ -6,14 +6,18 @@ require_once __DIR__ . "/vendor/autoload.php";
 
 $Router = new Router(true);
 
-$Router->router('/users/{name}/profile');
+$Router->router('/users', ['methods' => ['GET', 'POST']]);
+
+$Router->router('/users/{name}');
+
 $Router->router('/users/{name}/profile/{id}');
 
 $Router->router('/users/{name}');
-$Router->router('/users');
 
 //$Router->router('/updates', ['path' => 'carpeta1/nombre', 'methods' => ['POST', 'GET', 'PUT']]);
 
-$Router->noFound(["error" => true, "message" => "No data", "data" => null, "token" => null]);
+$Router->noFound(function () {
+    echo "que pasa men";
+});
 
-$Router->run("/api");
+$Router->run("/api", "application/json");

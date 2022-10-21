@@ -1,26 +1,26 @@
 <?php
 
-class examples
+class Users_profile
 {
 
     public function GET()
     {
-        echo "GET_examples";
+        echo "GET_Users_profile";
     }
 
     public function POST()
     {
-        echo "POST_examples";
+        echo "POST_Users_profile";
     }
 
     public function PUT()
     {
-        echo "PUT_examples";
+        echo "PUT_Users_profile";
     }
 
     public function DELETE()
     {
-        echo "DELETE_examples";
+        echo "DELETE_Users_profile";
     }
 
 }
