@@ -41,6 +41,11 @@ class Router
 
     }
 
+    public function routerGroup(object $class, $callback = null)
+    {
+        $callback($this, $class);
+    }
+
     public function noFound($callback = null)
     {
         $this->noFound = $callback;
@@ -161,27 +166,25 @@ class Router
     {
         try {
 
+            $query = [];
+
             if ($contentType) {
-
                 header("Content-Type: $contentType");
-
+            } else {
+                header("Content-Type: application/json");
             }
 
             #Si la RutaURL está especificada, usar como path principal
             $this->routeURL = $routeURL ? $routeURL : $this->routeURL;
 
-            #Seteamos JSON como cabezera
-            // header("Content-Type: application/json");
-
             #Obtenemos el path completo solicitado
-
             $requestPath = parse_url($_SERVER['REQUEST_URI'])['path'];
 
             //Si tiene un Path creado, sacamos el primer parametro insertado
             if ($this->routeURL) {
                 #Filtramos los primeros string con slash
                 if (preg_match("/(^\/\w+)(.+)/", $requestPath, $requestPath_matched)) {
-                    #Si el primer parametro del path  es igual a el router impuesto routeURL
+                    #Si el primer parametro del path  es igual al router impuesto routeURL
                     if ($requestPath_matched[1] === $this->routeURL) {
                         $requestPath = $requestPath_matched[2];
                     } else {
@@ -192,168 +195,174 @@ class Router
             //switch para craer accion
             $found = false;
 
-            if ($this->routes) {
+            //Si NO tiene ruta
+            if (!$this->routes) {
+                return $this->callNoFound();
+            }
 
-                //tomamos todos los router Registrados
-                foreach ($this->routes as $path => $values) {
+            //tomamos todos los router Registrados
+            foreach ($this->routes as $path => $values) {
 
-                    $url_method = null;
+                $path = "/" . $path;
 
-                    $folder_class = null;
-                    $name_class = null;
+                $folder_class = null;
+                $name_class = null;
 
-                    $callback = isset($values['callback']) ? $values['callback'] : null;
-                    $settings = isset($values['settings']) ? $values['settings'] : null;
+                $callback = isset($values['callback']) ? $values['callback'] : null;
+                $settings = isset($values['settings']) ? $values['settings'] : null;
 
-                    $METHODS = null;
+                $METHODS = null;
 
-                    //Si obtenemos url con mas de 1 parametro, los unimos con _
-                    if (preg_match_all("/\/(\w+)/", $path, $path_matched)) {
+                //Si obtenemos url con mas de 1 parametro, los unimos con _
+                if (preg_match_all("/\/(\w+)/", $path, $path_matched)) {
+                    $name_class = ucfirst(implode('_', $path_matched[1]));
 
-                        $name_class = ucfirst(implode('_', $path_matched[1]));
+                }
+                //Si $values tiene meta datos
+                if (isset($settings) && is_array($settings)) {
 
-                    }
-                    //Si $values tiene meta datos
-                    if (isset($settings) && is_array($settings)) {
+                    if (isset($settings["path"])) {
 
-                        if (isset($settings["path"])) {
+                        if (preg_match("/(.*)\/(.*)/i", $settings["path"], $settings_path_matched)) {
 
-                            if (preg_match("/(.*)\/(.*)/i", $settings["path"], $settings_path_matched)) {
+                            $name_class = ucfirst(str_replace("@controller", '', strtolower($settings_path_matched[2])));
 
-                                $name_class = ucfirst(str_replace("@controller", '', strtolower($settings_path_matched[2])));
+                            $folder_class = "/" . $settings_path_matched[1];
+                        } else {
 
-                                $folder_class = "/" . $settings_path_matched[1];
-                            } else {
-
-                                $name_class = ucfirst(str_replace("@controller", '', strtolower($settings["path"])));
-                            }
-                        }
-                        if (isset($settings["methods"])) {
-                            if (!is_array($settings["methods"])) {
-                                throw new Exception("Error Method");
-                            }
-
-                            $METHODS = $settings["methods"];
+                            $name_class = ucfirst(str_replace("@controller", '', strtolower($settings["path"])));
                         }
                     }
-
-                    $json =
-                    (object) [
-                        "class_name" => $name_class,
-                        "route" => $path,
-                        "folder" => $folder_class,
-                        "methods" => $METHODS,
-                        "callback" => $callback ? true : false,
-                    ];
-
-                    $folder_path = $_SERVER['DOCUMENT_ROOT'] . "/Controllers$folder_class/";
-                    $controller_path = "$folder_path$name_class.php";
-                    //      if (!file_exists($extras_path)) {  $Template->create_extras(["return" => $this->noFound]);   }
-
-                    $this->create_path($folder_path);
-
-                    if (!isset($callback)) {
-                        $this->create_controller($name_class, $folder_path);
-
-                    }
-
-                    //    $this->json_update($json);
-
-                    if (preg_match_all("/\/(\w+)\/{(\w+)}/i", $path, $path_match) && preg_match_all("/\/(\w+)\/([\w%]+)/i", $requestPath, $requestpath_match)) {
-
-                        $query_keys = $path_match[2];
-                        $query_values = $requestpath_match[2];
-
-                        $maxNumb = count($query_keys);
-
-                        if ($maxNumb == count($query_values) && $maxNumb == count($path_match[1])) {
-
-                            $query_values = array_map(function ($values) {
-                                return urldecode($values);
-                            }, $query_values);
-
-                            $query = array_combine($query_keys, $query_values);
-                            $_GET = null;
-                            $_GET = $query;
-                            $url = array_map(function ($key, $values) {
-                                return $key . "/" . $values;
-                            }, $path_match[1], $query_values);
-
-                            preg_match_all("/{\w+}/i", $path, $path_old);
-
-                            $path = str_replace($path_old[0], $query, $path);
-
+                    if (isset($settings["methods"])) {
+                        if (!is_array($settings["methods"])) {
+                            throw new Exception("Error Method");
                         }
+
+                        $METHODS = $settings["methods"];
                     }
+                }
 
-                    //   print_r(PHP_EOL . $this->routeURL . $path . " !== " . $this->routeURL . urldecode($requestPath) . PHP_EOL);
+                $folder_path = $_SERVER['DOCUMENT_ROOT'] . "/Controllers$folder_class/";
+                $controller_path = "$folder_path$name_class.php";
+                //      if (!file_exists($extras_path)) {  $Template->create_extras(["return" => $this->noFound]);   }
 
-                    if ($this->routeURL . $path !== $this->routeURL . urldecode($requestPath)) {
-                        continue;
+                $this->create_path($folder_path);
+
+                if (!isset($callback)) {
+                    $this->create_controller($name_class, $folder_path);
+
+                }
+
+                //    $this->json_update($json);
+                $json =
+                (object) [
+                    "class_name" => $name_class,
+                    "route" => $path,
+                    "folder" => $folder_class,
+                    "methods" => $METHODS,
+                    "callback" => $callback ? true : false,
+                ];
+
+                if (preg_match_all("/\/(\w+)\/{(\w+)}/i", $path, $path_match) && preg_match_all("/\/(\w+)\/([\w%]+)/i", $requestPath, $requestpath_match)) {
+
+                    $query_keys = $path_match[2];
+                    $query_values = $requestpath_match[2];
+
+                    $maxNumb = count($query_keys);
+
+                    if ($maxNumb == count($query_values) && $maxNumb == count($path_match[1])) {
+
+                        $query_values = array_map(function ($values) {
+                            return urldecode($values);
+                        }, $query_values);
+
+                        $query = array_combine($query_keys, $query_values);
+
+                        $_GET = array_merge($_GET, $query);
+
+                        $url = array_map(function ($key, $values) {
+                            return $key . "/" . $values;
+                        }, $path_match[1], $query_values);
+
+                        preg_match_all("/{\w+}/i", $path, $path_old);
+
+                        $path = str_replace($path_old[0], $query, $path);
+
                     }
+                }
 
-                    $found = true;
+                //   print_r(PHP_EOL . $this->routeURL . $path . " !== " . $this->routeURL . urldecode($requestPath) . PHP_EOL);
 
-                    if (!$callback) {
-                        require $controller_path;
+                if ($this->routeURL . $path !== $this->routeURL . urldecode($requestPath)) {
+                    continue;
+                }
+                $found = true;
 
-                        $callback = new $name_class();
+                if (!$callback) {
+                    require $controller_path;
+                    $callback = new $name_class();
 
-                        http_response_code(200);
+                    http_response_code(200);
 
-                        $method = $_SERVER['REQUEST_METHOD'];
+                    $method = $_SERVER['REQUEST_METHOD'];
 
-                        if (method_exists($callback, $method)) {
+                    if (method_exists($callback, $method)) {
 
-                            $call_callback = false;
+                        $call_callback = false;
 
-                            if ($METHODS) {
-                                foreach ($METHODS as $key => $value) {
-                                    if ($value === $method) {
-                                        $call_callback = true;
-                                    }
+                        if ($METHODS) {
+                            foreach ($METHODS as $key => $value) {
+                                if ($value === $method) {
+                                    $call_callback = true;
                                 }
-                            } else {
-                                $call_callback = true;
-
                             }
+                        } else {
+                            $call_callback = true;
 
-                            if ($call_callback) {
-                                $_POST = $method === 'POST' || $method === 'PUT' ? json_decode(file_get_contents('php://input'), true) : null;
-                                $callback->{$method}($url_method);
-                            } else {
-                                throw new Exception('no methods');
-
-                            }
                         }
 
-                    } else {
-                        http_response_code(200);
-                        $callback();
+                        if ($call_callback) {
+                            $_POST = $method === 'POST' || $method === 'PUT' ? json_decode(file_get_contents('php://input'), true) : null;
+
+                            if ($callback->{$method}($query) === false) {
+                                $this->callNoFound();
+                            }
+                        } else {
+                            throw new Exception('no methods');
+
+                        }
                     }
+
+                } else {
+                    $callback();
                 }
+
             }
+
+            #Si al final del foreach no enonctró nada, lanzamos callnoFound()
             if (!$found) {
-                if (isset($this->noFound)) {
-                    echo json_encode($this->noFound);
-                }
+                return $this->callNoFound();
             }
+            return true;
+
         } catch (\Exception$th) {
             http_response_code(404);
-            if (isset($this->noFound)) {
-
-                $noFound = $this->noFound;
-
-                if (is_array($noFound)) {
-                    echo json_encode($noFound);
-                    return false;
-                } else {
-                    $noFound();
-                    return false;
-                }
-
-            }
-            return false;
+            return $this->callNoFound();
         }
     }
+
+    private function callNoFound()
+    {
+        if (isset($this->noFound)) {
+            if (is_array($this->noFound)) {
+                echo json_encode($this->noFound);
+            } else {
+                $this->noFound();
+            }
+
+        }
+        return false;
+
+    }
+
 }

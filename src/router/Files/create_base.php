@@ -3,22 +3,22 @@
 class examples
 {
 
-    public function GET()
+    public function GET($params)
     {
         echo "GET_examples";
     }
 
-    public function POST()
+    public function POST($params)
     {
         echo "POST_examples";
     }
 
-    public function PUT()
+    public function PUT($params)
     {
         echo "PUT_examples";
     }
 
-    public function DELETE()
+    public function DELETE($params)
     {
         echo "DELETE_examples";
     }
