@@ -7,7 +7,7 @@ require_once __DIR__ . "/vendor/autoload.php";
 $Router = new Router(true);
 
 //login user
-$Router->router('discovery', ["param" => 'id', "src" => 'users/discovery']);
+$Router->router('users', ["param" => 'id', "src" => 'users']);
 
 $Router->noFound(["message" => "no message"]);
 

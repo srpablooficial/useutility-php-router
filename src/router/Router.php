@@ -178,19 +178,31 @@ class Router
                 if (isset($settings) && is_array($settings)) {
 
                     if (isset($settings["src"])) {
+                        //$json->class_name = ucfirst(str_replace("@controller", '', strtolower($settings["src"])));
 
-                        #Si existe SRC y tiene mas de un slash
-                        if (preg_match("/(.*)\/(.*)/i", $settings["src"], $settings_path_matched)) {
+                        $json->folder_path = $settings["src"];
 
-                            $json->class_name = ucfirst(str_replace("@controller", '', strtolower($settings_path_matched[2])));
+                        /*
+                    #Si existe SRC y tiene mas de un slash
+                    if (preg_match("/(.*)\/(.*)/i", $settings["src"], $settings_path_matched)) {
 
-                            $json->folder_path = $settings_path_matched[1];
+                    $json->class_name = ucfirst(str_replace("@controller", '', strtolower($settings_path_matched[2])));
 
-                        } else {
-                            #Si existe SRC y NO tiene mas de un slash
-                            $json->class_name = ucfirst(str_replace("@controller", '', strtolower($settings["src"])));
-                        }
+                    $json->folder_path = $settings_path_matched[1];
+
+                    } else {
+                    #Si existe SRC y NO tiene mas de un slash
+                    $json->class_name = ucfirst(str_replace("@controller", '', strtolower($settings["src"])));
                     }
+
+                     */
+                    }
+
+                    if (isset($settings["name"])) {
+
+                        $json->class_name = $settings["name"];
+                    }
+
                     if (isset($settings["methods"])) {
                         if (!is_array($settings["methods"])) {
                             throw new Exception("Error Method");
